@@ -18,15 +18,34 @@ class TaskFixture extends Fixture implements DependentFixtureInterface
         /** @var TaskStatus $statusCreated */
         $statusCreated = $this->getReference(TaskStatus::CREATED);
 
-        $task = new Task();
-        $task->setText('Сформировать стек выполнения тестового задания');
-        $task->setStatus($statusDone);
-        $manager->persist($task);
+        $tasks = [
+            ['Task1 with status done active',$statusDone, false],
+            ['Task2 with status done active',$statusDone, false],
+            ['Task3 with status created active',$statusCreated, false],
+            ['Task4 with status created active',$statusCreated, false],
+            ['Task5 with status done deleted',$statusDone, true],
+            ['Task6 with status created deleted',$statusCreated, true],
+        ];
 
-        $task = new Task();
-        $task->setText('Сделать тестовое задание');
-        $task->setStatus($statusCreated);
-        $manager->persist($task);
+        $tasksForRemove = [];
+        foreach ($tasks as [$text, $status, $isDeleted]) {
+            $task = new Task();
+            $task->setText($text);
+            $task->setStatus($status);
+
+            $manager->persist($task);
+
+            if ($isDeleted) {
+                $tasksForRemove[] = $task;
+            }
+        }
+
+        $manager->flush();
+
+        foreach ($tasksForRemove as &$removingTask) {
+            $manager->remove($removingTask);
+        }
+        unset($removingTask);
 
         $manager->flush();
     }
